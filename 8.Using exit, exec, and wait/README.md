@@ -1,4 +1,4 @@
-For this exercise we will be using the system and exit system calls. 
+ For this exercise we will be using the system and exit system calls. 
 
 We will accomplish this by writing two independent programs, instead of a normal parent-child pairing.
 
