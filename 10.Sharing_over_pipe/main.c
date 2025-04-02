@@ -4,6 +4,10 @@
 #include <sys/wait.h>   
 #include <string.h>     
 
+// please create an executable for rand.c first
+// the code uses execvp to run ./rand with the necessary cmd line arguments
+
+
 // error checker
 int checkError(int val, const char* msg) {
     if (val == -1) {
@@ -57,7 +61,6 @@ int parentFunction(int fd[2]){
     // Outputs
     printf("Total values read: %d\n", counter);
     printf("Average of values read: %d\n", sum/counter);
-    
 
     close(fd[0]);
     wait(NULL);
