@@ -103,7 +103,7 @@ void child_process(int semid, int shmid) {
     }
 
     srand(time(NULL) ^ getpid());
-    binary_sem_wait(semid, 0); // Reserve child
+    reserveSem(semid, 0); // Reserve child
 
     data->num_blocks = (rand() % 11) + 10; // 10 to 20
     
@@ -112,11 +112,11 @@ void child_process(int semid, int shmid) {
         data->chars[i] = 'a' + (rand() % 26);
     }
 
-    binary_sem_post(semid, 1); // Release parent
-    binary_sem_wait(semid, 0); // Wait for parent again
+    releaseSem(semid, 1); // Release parent
+    reserveSem(semid, 0); // Wait for parent again
 
     shmdt(data);
-    binary_sem_post(semid, 1); // Final release for parent
+    releaseSem(semid, 1); // Final release for parent
 }
 
 
@@ -135,7 +135,7 @@ void parent_process(int semid, int shmid) {
     }
 
     srand(time(NULL) ^ getpid());
-    binary_sem_wait(semid, 1); // Wait for child
+    reserveSem(semid, 1); // Wait for child
 
     int width = (rand() % 6) + 10; // 10 to 15
     int count = 0;
@@ -150,8 +150,8 @@ void parent_process(int semid, int shmid) {
     }
     if (count % width != 0) putchar('\n');
 
-    binary_sem_post(semid, 0); // Signal child to cleanup
-    binary_sem_wait(semid, 1); // Wait for child to finish
+    releaseSem(semid, 0); // Signal child to cleanup
+    reserveSem(semid, 1); // Wait for child to finish
 
     shmdt(data);
 }
@@ -166,20 +166,19 @@ int main(int argc, char *argv[])
    int semid = checkError(semget(IPC_PRIVATE, 2, IPC_CREAT | 0666), "semget failed");
 
    // Initialize child semaphore (index 0) to available (1)
-   if (!binary_sem_initialize(semid, 0)) {
+   if (initSemAvailable(semid, 0) == -1) {
        perror("Failed to initialize child semaphore");
        exit(EXIT_FAILURE);
    }
    
    // Initialize parent semaphore (index 1) to in-use (0)
-   if (!binary_sem_initialize(semid, 1) || !binary_sem_wait(semid, 1)) {
-       perror("Failed to initialize parent semaphore");
+   if (initSemInUse(semid, 1) == -1) {
+      perror("Failed to initialize parent semaphore");
        exit(EXIT_FAILURE);
    }
    
 
    int shmid = checkError(shmget(IPC_PRIVATE, sizeof(sharedData), IPC_CREAT | 0666), "shmget failed");
-
    pid_t pid = checkError(fork(), "fork faield");
 
    if (pid == 0) {
@@ -191,7 +190,6 @@ int main(int argc, char *argv[])
    }
 
 
-   // After wait(NULL)
    if (semctl(semid, 0, IPC_RMID) == -1) {
       perror("semctl(IPC_RMID) failed");
    }
