@@ -177,7 +177,6 @@ int main(int argc, char *argv[])
        exit(EXIT_FAILURE);
    }
    
-
    int shmid = checkError(shmget(IPC_PRIVATE, sizeof(sharedData), IPC_CREAT | 0666), "shmget failed");
    pid_t pid = checkError(fork(), "fork faield");
 
