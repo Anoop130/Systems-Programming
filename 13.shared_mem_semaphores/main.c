@@ -143,12 +143,16 @@ void parent_process(int semid, int shmid) {
     printf("\n--- ASCII MODERN ART ---\n\n");
     for (int i = 0; i < data->num_blocks; i++) {
         for (int j = 0; j < data->len_block[i]; j++) {
-            putchar(data->chars[i]);
+            printf("%c",data->chars[i]);
             count++;
-            if (count % width == 0) putchar('\n');
+            if (count % width == 0) {
+               printf("\n");
+            };
         }
     }
-    if (count % width != 0) putchar('\n');
+    if (count % width != 0) {
+         printf("\n");
+    }
 
     releaseSem(semid, 0); // Signal child to cleanup
     reserveSem(semid, 1); // Wait for child to finish
@@ -165,13 +169,13 @@ int main(int argc, char *argv[])
 
    int semid = checkError(semget(IPC_PRIVATE, 2, IPC_CREAT | 0666), "semget failed");
 
-   // Initialize child semaphore (index 0) to available (1)
+   // Initialize child semaphore to available
    if (initSemAvailable(semid, 0) == -1) {
        perror("Failed to initialize child semaphore");
        exit(EXIT_FAILURE);
    }
    
-   // Initialize parent semaphore (index 1) to in-use (0)
+   // Initialize parent semaphore to in use
    if (initSemInUse(semid, 1) == -1) {
       perror("Failed to initialize parent semaphore");
        exit(EXIT_FAILURE);
